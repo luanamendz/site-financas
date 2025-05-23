@@ -1,178 +1,130 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
+import "../public/style.css";
 
 export default function Home() {
-  const [salario, setSalario] = useState("");
-  const [limite, setLimite] = useState("");
-  const [categorias, setCategorias] = useState([]);
-  const [novaCategoria, setNovaCategoria] = useState("");
+  const [salario, setSalario] = useState(0);
+  const [limite, setLimite] = useState(0);
+  const [gastos, setGastos] = useState([]);
 
-  const adicionarCategoria = () => {
-    if (novaCategoria.trim() === "") return;
-    setCategorias([...categorias, { nome: novaCategoria, gasto: "" }]);
-    setNovaCategoria("");
+  const categorias = [
+    "Alimentação",
+    "Transporte",
+    "Lazer",
+    "Delivery",
+    "Educação",
+    "Saúde",
+    "Compras",
+    "Investimentos",
+    "Outros"
+  ];
+
+  const adicionarGasto = () => {
+    const categoria = document.getElementById("categoria").value;
+    const valor = parseFloat(document.getElementById("valor").value);
+
+    if (!categoria || isNaN(valor)) {
+      alert("Preencha todos os campos!");
+      return;
+    }
+
+    const novoGasto = { categoria, valor };
+    setGastos([...gastos, novoGasto]);
+
+    document.getElementById("categoria").value = "";
+    document.getElementById("valor").value = "";
   };
 
-  const atualizarGasto = (index, valor) => {
-    const novasCategorias = [...categorias];
-    novasCategorias[index].gasto = valor;
-    setCategorias(novasCategorias);
-  };
+  const totalGastos = gastos.reduce((acc, item) => acc + item.valor, 0);
 
   const gerarPlanilha = () => {
-    const data = [
-      ["Salário", salario],
-      ["Limite Mensal", limite],
-      [],
-      ["Categoria", "Gasto"]
-    ];
-
-    categorias.forEach((cat) => {
-      data.push([cat.nome, cat.gasto]);
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(data);
+    const ws = XLSX.utils.json_to_sheet(gastos);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Finanças");
-
-    XLSX.writeFile(wb, "planilha-financeira.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Gastos");
+    XLSX.writeFile(wb, "gastos.xlsx");
   };
 
-  const somaGastos = categorias.reduce((acc, cat) => acc + Number(cat.gasto || 0), 0);
-  const limiteNum = Number(limite);
+  const corLinha = (valor) => {
+    const porcentagem = (valor / limite) * 100;
+    if (porcentagem <= 60) return "verde";
+    if (porcentagem <= 80) return "amarelo";
+    if (porcentagem <= 100) return "laranja";
+    return "vermelho";
+  };
 
   return (
     <div className="container">
-      <h1>Organizador Financeiro</h1>
+      <h1>💰 Planejador de Gastos</h1>
 
       <div className="input-group">
-        <label>Salário:</label>
+        <label>💸 Salário:</label>
         <input
           type="number"
+          placeholder="Seu salário"
           value={salario}
-          onChange={(e) => setSalario(e.target.value)}
-          placeholder="Digite seu salário"
+          onChange={(e) => setSalario(parseFloat(e.target.value))}
         />
       </div>
 
       <div className="input-group">
-        <label>Limite Mensal:</label>
+        <label>🎯 Limite de Gastos:</label>
         <input
           type="number"
+          placeholder="Quanto pode gastar"
           value={limite}
-          onChange={(e) => setLimite(e.target.value)}
-          placeholder="Quanto quer gastar no máximo?"
+          onChange={(e) => setLimite(parseFloat(e.target.value))}
         />
       </div>
 
+      <h2>➕ Adicionar Gastos</h2>
       <div className="input-group">
-        <label>Nova Categoria:</label>
-        <input
-          type="text"
-          value={novaCategoria}
-          onChange={(e) => setNovaCategoria(e.target.value)}
-          placeholder="Ex: Delivery, Transporte..."
-        />
-        <button onClick={adicionarCategoria}>Adicionar</button>
+        <label>Categoria:</label>
+        <select id="categoria">
+          <option value="">Selecione</option>
+          {categorias.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+
+        <input type="number" id="valor" placeholder="Valor" />
+
+        <button onClick={adicionarGasto}>Adicionar</button>
       </div>
 
-      <h2>Gastos</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Categoria</th>
-            <th>Gasto (R$)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categorias.map((cat, index) => {
-            const valor = Number(cat.gasto || 0);
-            let cor = "verde";
-
-            if (somaGastos >= limiteNum) cor = "vermelho";
-            else if (somaGastos >= limiteNum * 0.8) cor = "laranja";
-            else if (somaGastos >= limiteNum * 0.5) cor = "amarelo";
-
-            return (
-              <tr key={index} className={cor}>
-                <td>{cat.nome}</td>
-                <td>
-                  <input
-                    type="number"
-                    value={cat.gasto}
-                    onChange={(e) => atualizarGasto(index, e.target.value)}
-                  />
-                </td>
+      {gastos.length > 0 && (
+        <>
+          <table>
+            <thead>
+              <tr>
+                <th>Categoria</th>
+                <th>Valor</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {gastos.map((item, index) => (
+                <tr key={index} className={corLinha(item.valor)}>
+                  <td>{item.categoria}</td>
+                  <td>R$ {item.valor.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-      <div className="resumo">
-        <p>Total de Gastos: <strong>R$ {somaGastos.toFixed(2)}</strong></p>
-        <p>Limite Definido: <strong>R$ {limite || 0}</strong></p>
-      </div>
+          <div className="resumo">
+            <strong>Salário:</strong> R$ {salario.toFixed(2)} <br />
+            <strong>Limite de Gastos:</strong> R$ {limite.toFixed(2)} <br />
+            <strong>Total de Gastos:</strong> R$ {totalGastos.toFixed(2)} <br />
+            <strong>Saldo Restante:</strong>{" "}
+            R$ {(salario - totalGastos).toFixed(2)}
+          </div>
 
-      <button onClick={gerarPlanilha} className="btn-gerar">
-        Gerar Planilha
-      </button>
-
-      <style jsx>{`
-        .container {
-          max-width: 700px;
-          margin: 0 auto;
-          padding: 20px;
-          font-family: Arial;
-        }
-        h1 {
-          text-align: center;
-        }
-        .input-group {
-          margin-bottom: 15px;
-        }
-        input[type="text"],
-        input[type="number"] {
-          padding: 8px;
-          margin-right: 8px;
-        }
-        button {
-          padding: 8px 16px;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 15px;
-        }
-        th, td {
-          border: 1px solid #ccc;
-          padding: 8px;
-          text-align: center;
-        }
-        tr.verde {
-          background-color: #d4edda;
-        }
-        tr.amarelo {
-          background-color: #fff3cd;
-        }
-        tr.laranja {
-          background-color: #ffeeba;
-        }
-        tr.vermelho {
-          background-color: #f8d7da;
-        }
-        .resumo {
-          margin-top: 15px;
-          font-size: 1.1em;
-        }
-        .btn-gerar {
-          margin-top: 15px;
-          background-color: #4caf50;
-          color: white;
-          border: none;
-          cursor: pointer;
-        }
-      `}</style>
+          <button className="btn-gerar" onClick={gerarPlanilha}>
+            📥 Gerar Planilha Excel
+          </button>
+        </>
+      )}
     </div>
   );
 }
