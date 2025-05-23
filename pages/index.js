@@ -1,130 +1,69 @@
-import { useState } from "react";
-import * as XLSX from "xlsx";
-import "../public/style.css";
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planilhas Financeiras</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Meu Financeiro Fácil</h1>
+            <nav>
+                <a href="#">Início</a>
+                <a href="#">Sobre</a>
+                <a href="#">Contato</a>
+                <a href="#">Gerar Planilha</a>
+            </nav>
+        </div>
+    </header>
 
-export default function Home() {
-  const [salario, setSalario] = useState(0);
-  const [limite, setLimite] = useState(0);
-  const [gastos, setGastos] = useState([]);
+    <main>
+        <section class="intro">
+            <div class="texto">
+                <h2>Use nossas planilhas para organizar as suas finanças e se planejar</h2>
+                <p>Com nossas planilhas, você organiza suas finanças de forma simples e prática. Insira seus dados e deixe que a mágica dos cálculos automáticos faça o resto!</p>
+                <p>São diversas opções: orçamento pessoal, estudantes, aposentados, quitação de dívidas, investimentos e muito mais.</p>
+                <strong>Vamos lá? Escolha a planilha que mais combina com você e baixe agora!</strong>
+            </div>
+            <div class="card-info">
+                <h3>Meu Financeiro Fácil</h3>
+                <p><strong>Simples e descomplicado:</strong><br> Seu primeiro passo na educação financeira começa aqui.</p>
+                <button>Acesse</button>
+            </div>
+        </section>
 
-  const categorias = [
-    "Alimentação",
-    "Transporte",
-    "Lazer",
-    "Delivery",
-    "Educação",
-    "Saúde",
-    "Compras",
-    "Investimentos",
-    "Outros"
-  ];
+        <section class="planilhas">
+            <div class="card amarelo">
+                <img src="https://img.icons8.com/ios-filled/100/000000/home.png"/>
+                <h4>Orçamento Pessoal</h4>
+            </div>
+            <div class="card azul">
+                <img src="https://img.icons8.com/ios-filled/100/000000/graduation-cap.png"/>
+                <h4>Para Estudantes</h4>
+            </div>
+            <div class="card vermelho">
+                <img src="https://img.icons8.com/ios-filled/100/000000/document.png"/>
+                <h4>Aposentados</h4>
+            </div>
+            <div class="card verde">
+                <img src="https://img.icons8.com/ios-filled/100/000000/money.png"/>
+                <h4>Quitação de Dívidas</h4>
+            </div>
+            <div class="card rosa">
+                <img src="https://img.icons8.com/ios-filled/100/000000/line-chart.png"/>
+                <h4>Investimentos</h4>
+            </div>
+            <div class="card laranja">
+                <img src="https://img.icons8.com/ios-filled/100/000000/real-estate.png"/>
+                <h4>Alugar x Financiar</h4>
+            </div>
+        </section>
+    </main>
 
-  const adicionarGasto = () => {
-    const categoria = document.getElementById("categoria").value;
-    const valor = parseFloat(document.getElementById("valor").value);
-
-    if (!categoria || isNaN(valor)) {
-      alert("Preencha todos os campos!");
-      return;
-    }
-
-    const novoGasto = { categoria, valor };
-    setGastos([...gastos, novoGasto]);
-
-    document.getElementById("categoria").value = "";
-    document.getElementById("valor").value = "";
-  };
-
-  const totalGastos = gastos.reduce((acc, item) => acc + item.valor, 0);
-
-  const gerarPlanilha = () => {
-    const ws = XLSX.utils.json_to_sheet(gastos);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Gastos");
-    XLSX.writeFile(wb, "gastos.xlsx");
-  };
-
-  const corLinha = (valor) => {
-    const porcentagem = (valor / limite) * 100;
-    if (porcentagem <= 60) return "verde";
-    if (porcentagem <= 80) return "amarelo";
-    if (porcentagem <= 100) return "laranja";
-    return "vermelho";
-  };
-
-  return (
-    <div className="container">
-      <h1>💰 Planejador de Gastos</h1>
-
-      <div className="input-group">
-        <label>💸 Salário:</label>
-        <input
-          type="number"
-          placeholder="Seu salário"
-          value={salario}
-          onChange={(e) => setSalario(parseFloat(e.target.value))}
-        />
-      </div>
-
-      <div className="input-group">
-        <label>🎯 Limite de Gastos:</label>
-        <input
-          type="number"
-          placeholder="Quanto pode gastar"
-          value={limite}
-          onChange={(e) => setLimite(parseFloat(e.target.value))}
-        />
-      </div>
-
-      <h2>➕ Adicionar Gastos</h2>
-      <div className="input-group">
-        <label>Categoria:</label>
-        <select id="categoria">
-          <option value="">Selecione</option>
-          {categorias.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-
-        <input type="number" id="valor" placeholder="Valor" />
-
-        <button onClick={adicionarGasto}>Adicionar</button>
-      </div>
-
-      {gastos.length > 0 && (
-        <>
-          <table>
-            <thead>
-              <tr>
-                <th>Categoria</th>
-                <th>Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {gastos.map((item, index) => (
-                <tr key={index} className={corLinha(item.valor)}>
-                  <td>{item.categoria}</td>
-                  <td>R$ {item.valor.toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="resumo">
-            <strong>Salário:</strong> R$ {salario.toFixed(2)} <br />
-            <strong>Limite de Gastos:</strong> R$ {limite.toFixed(2)} <br />
-            <strong>Total de Gastos:</strong> R$ {totalGastos.toFixed(2)} <br />
-            <strong>Saldo Restante:</strong>{" "}
-            R$ {(salario - totalGastos).toFixed(2)}
-          </div>
-
-          <button className="btn-gerar" onClick={gerarPlanilha}>
-            📥 Gerar Planilha Excel
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
+    <footer>
+        <p>&copy; 2025 Meu Financeiro Fácil | Todos os direitos reservados</p>
+    </footer>
+</body>
+</html>
