@@ -3,146 +3,176 @@ import * as XLSX from "xlsx";
 
 export default function Home() {
   const [salario, setSalario] = useState("");
-  const [limiteTotal, setLimiteTotal] = useState("");
-  const [categorias, setCategorias] = useState([
-    { nome: "Comida", gasto: "" },
-    { nome: "Delivery", gasto: "" },
-    { nome: "Transporte", gasto: "" },
-    { nome: "Roles", gasto: "" },
-    { nome: "Diversão", gasto: "" },
-  ]);
+  const [limite, setLimite] = useState("");
+  const [categorias, setCategorias] = useState([]);
   const [novaCategoria, setNovaCategoria] = useState("");
 
-  // Atualiza gasto de uma categoria
-  const atualizarGasto = (index, valor) => {
-    const novas = [...categorias];
-    novas[index].gasto = valor;
-    setCategorias(novas);
-  };
-
-  // Adiciona categoria nova
   const adicionarCategoria = () => {
-    if (!novaCategoria.trim()) return;
-    setCategorias([...categorias, { nome: novaCategoria.trim(), gasto: "" }]);
+    if (novaCategoria.trim() === "") return;
+    setCategorias([...categorias, { nome: novaCategoria, gasto: "" }]);
     setNovaCategoria("");
   };
 
-  // Cores baseadas no gasto x limite
-  // verde: gasto <= 70% limite
-  // amarelo: 70% < gasto <= 90%
-  // laranja: 90% < gasto <= 100%
-  // vermelho: gasto > limite
-  const corCelula = (gasto, limite) => {
-    const gastoNum = parseFloat(gasto);
-    const limiteNum = parseFloat(limite);
-    if (isNaN(gastoNum) || isNaN(limiteNum)) return "transparent";
-    const ratio = gastoNum / limiteNum;
-    if (ratio > 1) return "#ff4d4d"; // vermelho
-    if (ratio > 0.9) return "#ff944d"; // laranja
-    if (ratio > 0.7) return "#ffeb3b"; // amarelo
-    return "#b6fcd5"; // verde clarinho
+  const atualizarGasto = (index, valor) => {
+    const novasCategorias = [...categorias];
+    novasCategorias[index].gasto = valor;
+    setCategorias(novasCategorias);
   };
 
-  // Gera planilha Excel pra baixar
   const gerarPlanilha = () => {
-    const wb = XLSX.utils.book_new();
-    const wsData = [
-      ["Categoria", "Gasto", "Status"],
-      ...categorias.map(({ nome, gasto }) => {
-        const gastoNum = parseFloat(gasto) || 0;
-        const limiteNum = parseFloat(limiteTotal) || 0;
-        let status = "OK";
-        const ratio = gastoNum / limiteNum;
-        if (ratio > 1) status = "Estourado";
-        else if (ratio > 0.9) status = "Quase lá";
-        else if (ratio > 0.7) status = "Atenção";
-        return [nome, gastoNum, status];
-      }),
-      ["Salário", salario, ""],
-      ["Limite Total", limiteTotal, ""],
+    const data = [
+      ["Salário", salario],
+      ["Limite Mensal", limite],
+      [],
+      ["Categoria", "Gasto"]
     ];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, "Controle Financeiro");
+
+    categorias.forEach((cat) => {
+      data.push([cat.nome, cat.gasto]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Finanças");
+
     XLSX.writeFile(wb, "planilha-financeira.xlsx");
   };
 
-  return (
-    <div style={{ maxWidth: 700, margin: "auto", padding: 20, fontFamily: "Arial, sans-serif" }}>
-      <h1>Gerador de Planilhas Financeiras</h1>
+  const somaGastos = categorias.reduce((acc, cat) => acc + Number(cat.gasto || 0), 0);
+  const limiteNum = Number(limite);
 
-      <label style={{ display: "block", marginBottom: 10 }}>
-        Salário Mensal:
+  return (
+    <div className="container">
+      <h1>Organizador Financeiro</h1>
+
+      <div className="input-group">
+        <label>Salário:</label>
         <input
           type="number"
           value={salario}
           onChange={(e) => setSalario(e.target.value)}
-          placeholder="Ex: 3500"
-          style={{ width: "100%", padding: 8, marginTop: 5 }}
+          placeholder="Digite seu salário"
         />
-      </label>
-
-      <label style={{ display: "block", marginBottom: 20 }}>
-        Limite Total para Gastos:
-        <input
-          type="number"
-          value={limiteTotal}
-          onChange={(e) => setLimiteTotal(e.target.value)}
-          placeholder="Ex: 2000"
-          style={{ width: "100%", padding: 8, marginTop: 5 }}
-        />
-      </label>
-
-      <h3>Categorias e Gastos</h3>
-      {categorias.map((cat, i) => (
-        <div key={i} style={{ marginBottom: 12 }}>
-          <span>{cat.nome}:</span>
-          <input
-            type="number"
-            value={cat.gasto}
-            onChange={(e) => atualizarGasto(i, e.target.value)}
-            placeholder="0"
-            style={{
-              marginLeft: 12,
-              padding: 6,
-              width: 120,
-              backgroundColor: corCelula(cat.gasto, limiteTotal),
-              border: "1px solid #ccc",
-              borderRadius: 4,
-              textAlign: "right",
-            }}
-          />
-        </div>
-      ))}
-
-      <div style={{ marginTop: 15 }}>
-        <input
-          type="text"
-          placeholder="Adicionar categoria"
-          value={novaCategoria}
-          onChange={(e) => setNovaCategoria(e.target.value)}
-          style={{ padding: 8, width: 200, marginRight: 10 }}
-        />
-        <button onClick={adicionarCategoria} style={{ padding: "8px 16px" }}>
-          +
-        </button>
       </div>
 
-      <button
-        onClick={gerarPlanilha}
-        style={{
-          marginTop: 30,
-          padding: "12px 30px",
-          backgroundColor: "#0070f3",
-          color: "white",
-          border: "none",
-          borderRadius: 6,
-          cursor: "pointer",
-          fontWeight: "bold",
-          fontSize: 16,
-        }}
-      >
-        Gerar Planilha Excel
+      <div className="input-group">
+        <label>Limite Mensal:</label>
+        <input
+          type="number"
+          value={limite}
+          onChange={(e) => setLimite(e.target.value)}
+          placeholder="Quanto quer gastar no máximo?"
+        />
+      </div>
+
+      <div className="input-group">
+        <label>Nova Categoria:</label>
+        <input
+          type="text"
+          value={novaCategoria}
+          onChange={(e) => setNovaCategoria(e.target.value)}
+          placeholder="Ex: Delivery, Transporte..."
+        />
+        <button onClick={adicionarCategoria}>Adicionar</button>
+      </div>
+
+      <h2>Gastos</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th>Gasto (R$)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {categorias.map((cat, index) => {
+            const valor = Number(cat.gasto || 0);
+            let cor = "verde";
+
+            if (somaGastos >= limiteNum) cor = "vermelho";
+            else if (somaGastos >= limiteNum * 0.8) cor = "laranja";
+            else if (somaGastos >= limiteNum * 0.5) cor = "amarelo";
+
+            return (
+              <tr key={index} className={cor}>
+                <td>{cat.nome}</td>
+                <td>
+                  <input
+                    type="number"
+                    value={cat.gasto}
+                    onChange={(e) => atualizarGasto(index, e.target.value)}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      <div className="resumo">
+        <p>Total de Gastos: <strong>R$ {somaGastos.toFixed(2)}</strong></p>
+        <p>Limite Definido: <strong>R$ {limite || 0}</strong></p>
+      </div>
+
+      <button onClick={gerarPlanilha} className="btn-gerar">
+        Gerar Planilha
       </button>
+
+      <style jsx>{`
+        .container {
+          max-width: 700px;
+          margin: 0 auto;
+          padding: 20px;
+          font-family: Arial;
+        }
+        h1 {
+          text-align: center;
+        }
+        .input-group {
+          margin-bottom: 15px;
+        }
+        input[type="text"],
+        input[type="number"] {
+          padding: 8px;
+          margin-right: 8px;
+        }
+        button {
+          padding: 8px 16px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 15px;
+        }
+        th, td {
+          border: 1px solid #ccc;
+          padding: 8px;
+          text-align: center;
+        }
+        tr.verde {
+          background-color: #d4edda;
+        }
+        tr.amarelo {
+          background-color: #fff3cd;
+        }
+        tr.laranja {
+          background-color: #ffeeba;
+        }
+        tr.vermelho {
+          background-color: #f8d7da;
+        }
+        .resumo {
+          margin-top: 15px;
+          font-size: 1.1em;
+        }
+        .btn-gerar {
+          margin-top: 15px;
+          background-color: #4caf50;
+          color: white;
+          border: none;
+          cursor: pointer;
+        }
+      `}</style>
     </div>
   );
 }
