@@ -5,14 +5,12 @@
   box-sizing: border-box;
 }
 
-/* Fonte geral */
 body {
   background-color: #f4f4f9;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
 }
 
-/* Container central */
 .container {
   max-width: 800px;
   margin: 40px auto;
@@ -22,18 +20,17 @@ body {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Títulos */
 h1, h2 {
   text-align: center;
   margin-bottom: 20px;
   color: #333;
 }
 
-/* Grupos de inputs */
 .input-group {
   display: flex;
   align-items: center;
   margin-bottom: 15px;
+  gap: 10px;
 }
 
 .input-group label {
@@ -41,12 +38,21 @@ h1, h2 {
   font-weight: bold;
 }
 
-.input-group input[type="text"],
-.input-group input[type="number"] {
+.input-group input[type="number"],
+select {
   flex: 1;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 8px;
+  background-color: white;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+select:focus,
+input:focus {
+  border-color: #6c63ff;
+  outline: none;
 }
 
 .input-group button {
@@ -63,7 +69,6 @@ h1, h2 {
   background-color: #4e47d7;
 }
 
-/* Tabela */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -97,7 +102,6 @@ tr.vermelho {
   background-color: #f8d7da;
 }
 
-/* Resumo */
 .resumo {
   margin-top: 20px;
   font-size: 1.1em;
@@ -106,7 +110,6 @@ tr.vermelho {
   border-radius: 8px;
 }
 
-/* Botão de gerar planilha */
 .btn-gerar {
   margin-top: 20px;
   width: 100%;
